@@ -1,4 +1,4 @@
-package com.example.a2dptest;
+package com.iradetskiy.vkaudioplayer;
 
 import java.io.IOException;
 import org.apache.http.client.ClientProtocolException;

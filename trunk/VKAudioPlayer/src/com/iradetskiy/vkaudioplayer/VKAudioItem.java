@@ -1,4 +1,4 @@
-package com.example.a2dptest;
+package com.iradetskiy.vkaudioplayer;
 
 public class VKAudioItem {
 	public String aid;
