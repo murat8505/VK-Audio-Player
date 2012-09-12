@@ -10,5 +10,11 @@
     <string name="menu_download">Download</string>
     <string name="menu_to_downloads">To Downloads</string>
     <string name="menu_to_playlist">To Playlist</string>
+    <string name="search_list_header_searching">Searching\u2026</string>
+    <string name="search_list_header_before_searching"/>
+    <plurals name="number_of_found_audio_items">
+        <item quantity="one"><b>1 item</b></item>
+        <item quantity="other"><b>%d items</b></item>
+    </plurals>
 
 </resources>

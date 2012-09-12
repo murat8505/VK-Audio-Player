@@ -1,67 +1,75 @@
 package com.iradetskiy.vkaudioplayer;
 
-import java.io.File;
-
 import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnPreparedListener;
-import android.net.Uri;
 import android.os.IBinder;
-import android.util.Log;
 
 public class PlayAudioService extends Service implements OnPreparedListener {
 
-	private static final String ACTION_PLAY = "com.example.action.PLAY";
+	public static final String ACTION_PLAY = "com.iradetskiy.action.PLAY";
+	public static final String ACTION_STOP = "com.iradetskiy.action.STOP";
+	public static final String ACTION_PAUSE = "com.iradetskiy.action.PAUSE";
+	
 	MediaPlayer mMediaPlayer = null;
+	String currentUrl = null;
+	
+	@Override
+    public void onCreate() {
+		mMediaPlayer = new MediaPlayer();
+		mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC); 
+        mMediaPlayer.setOnPreparedListener(this);
+    }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-    	Log.i("iradetskiy", this.toString());
-    	if (intent.getAction().equals("com.iradetskiy.play")){
+    	
+    	if (intent.getAction().equals(PlayAudioService.ACTION_PLAY)){
+            
+    		if (currentUrl != null) {
+    			
+    			if (currentUrl.equals(intent.getExtras().getString(SearchActivity.from[3]))) {
+    				
+    				mMediaPlayer.start();
+    			}
+    			else {
+    				
+    				try{
+    	            	mMediaPlayer.setDataSource(intent.getExtras().getString(SearchActivity.from[3]));
+    	            	mMediaPlayer.prepareAsync();
+    	            }
+    				catch (Exception e) {}
+    			}
+    		}            
+    	} 
+    	else if (intent.getAction().equals(PlayAudioService.ACTION_PAUSE)){
     		
-    		/*Uri myUri = Uri.fromFile(new File("/sdcard/Music/Kalimba.mp3"));
-            mMediaPlayer = new MediaPlayer();
-    		mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC); // initialize it here
-            mMediaPlayer.setOnPreparedListener(this);
-            try{
-            	mMediaPlayer.setDataSource(this, myUri);
-            	mMediaPlayer.prepareAsync();
-            }
-			catch (Exception e){
-				
-			}*/
+    		mMediaPlayer.pause();    		
     	}
-    	if (intent.getAction().equals("com.iradetskiy.stop")){
-    		/*mMediaPlayer.stop();
-    		mMediaPlayer.release();
-    		mMediaPlayer = null;
-    		stopSelf();*/
+    	else if (intent.getAction().equals(PlayAudioService.ACTION_STOP)){
+    		
+    		mMediaPlayer.stop();
     	}
-        //if (intent.getAction().equals(ACTION_PLAY)) {
-        	/*Uri myUri = Uri.fromFile(new File("/sdcard/Music/Kalimba.mp3"));
-            mMediaPlayer = new MediaPlayer();
-    		mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC); // initialize it here
-            mMediaPlayer.setOnPreparedListener(this);
-            try{
-            	mMediaPlayer.setDataSource(this, myUri);
-            	mMediaPlayer.prepareAsync();
-            }
-			catch (Exception e){
-				
-			}*/
-        //S}
+    	
 		return super.onStartCommand(intent, flags, startId);
     }
 
-    /** Called when MediaPlayer is ready */
     public void onPrepared(MediaPlayer player) {
         player.start();
     }
     
 	@Override
 	public IBinder onBind(Intent arg0) {
-		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	@Override
+    public void onDestroy() {
+		
+		mMediaPlayer.stop();
+		mMediaPlayer.release();
+		mMediaPlayer = null;
+		
+    }
 }

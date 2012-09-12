@@ -6,6 +6,7 @@
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="15" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:icon="@drawable/ic_launcher"
@@ -20,6 +21,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".PlayAudioService">
+            <intent-filter>
+                <action android:name="com.iradetskiy.action.PLAY" />
+                <action android:name="com.iradetskiy.action.STOP" />
+                <action android:name="com.iradetskiy.action.PAUSE" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

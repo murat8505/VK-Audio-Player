@@ -7,6 +7,7 @@ import java.util.Map;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
@@ -14,9 +15,12 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.TextView;
 
 public class SearchActivity extends Activity implements OnItemClickListener{
 
+	public static final String[] from = {"song", "artist", "duration", "url"}; 
+	
 	private final String accessToken = "e27affe5e2da0ecbe2da0ecbe6e2f0a839ee2dae2db0ec380fa798a1438b154";
 	private EditText searchText;
 	private ListView searchList;
@@ -28,6 +32,10 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         setContentView(R.layout.search);
         
         searchList = (ListView)findViewById(R.id.searchResultsList);
+        View header = this.getLayoutInflater().inflate(R.layout.search_list_header, searchList, false);
+        searchList.addHeaderView(header);
+        searchList.setAdapter(null);
+        ((TextView)findViewById(R.id.header_title)).setText(this.getResources().getQuantityString(R.plurals.number_of_found_audio_items, 0, 0));
         searchList.setOnItemClickListener(this);
         
         searchText = (EditText)findViewById(R.id.searchText);
@@ -41,7 +49,10 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     }
     
     public void onSearchButtonClick(View v){
-    	
+    	String q = searchText.getText().toString();
+    	if (q != null && !q.equals("")){
+    		new LoadSearchResultsTask().execute(q);
+    	}
     }
     
     private class LoadSearchResultsTask extends AsyncTask<String, Void, VKAudioSearchResponse> {
@@ -61,7 +72,6 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     	@Override
     	protected void onPostExecute(VKAudioSearchResponse response) {
     		
-    		String[] from = {"song", "artist", "duration", "url"};
     		int[] to = {R.id.song, R.id.artist, R.id.duration};
     		
     		ArrayList<Map<String, Object>> data = new ArrayList<Map<String,Object>>(response.getItems().size());
@@ -82,7 +92,17 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     	}
     }
     
-    public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+    public void onItemClick(AdapterView<?> list, View parent, int pos, long id) {
+    	Intent playIntent = new Intent();
     	
-	}
+		Map<String, String> map = (Map<String, String>)list.getAdapter().getItem(pos);
+    	playIntent.putExtra(from[0], map.get(from[0]));
+    	playIntent.putExtra(from[1], map.get(from[1]));
+    	playIntent.putExtra(from[2], map.get(from[2]));
+    	playIntent.putExtra(from[3], map.get(from[3]));
+    	
+    	playIntent.setAction(PlayAudioService.ACTION_PLAY);
+    	
+    	this.startService(playIntent);
+    }
 }
