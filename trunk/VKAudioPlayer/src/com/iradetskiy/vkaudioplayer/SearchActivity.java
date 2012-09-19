@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -40,12 +39,6 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         
         searchText = (EditText)findViewById(R.id.searchText);
         api = new VKAudio(accessToken);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_search, menu);
-        return true;
     }
     
     public void onSearchButtonClick(View v){

@@ -4,7 +4,7 @@
     <string name="menu_settings">Settings</string>
     <string name="title_activity_search">Search</string>
     <string name="search_label">Search:</string>
-    
+    <string name="title_activity_vklogin">VKLoginActivity</string>
     <string name="search_hint">Artist or song</string>
     <string name="search_button">Search</string>
     <string name="menu_download">Download</string>
