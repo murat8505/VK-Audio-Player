@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.view.Menu;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -16,19 +15,19 @@ public class CurrentUserAudioActivity extends Activity {
 
 	VKApi mApi;
 	public static final String[] from = {"song", "artist", "duration", "url"}; 
-	ListView searchList;
+	ListView currentUserAudioList;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.search);
+		setContentView(R.layout.current_user_audio);
 
 		Intent intent = getIntent();
 		Bundle extras = intent.getExtras();
 		String userId = (String) extras.get(VKApi.USER_ID);
 		String accessToken = (String) extras.get(VKApi.ACCESS_TOKEN);
 
-		searchList = (ListView)findViewById(R.id.searchResultsList);
+		currentUserAudioList = (ListView)findViewById(R.id.currentUserAudioList);
 		
 		mApi = new VKApi(accessToken);
 		new LoadUserNameTask().execute(userId);
@@ -72,7 +71,7 @@ public class CurrentUserAudioActivity extends Activity {
 
 			SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this,
 					data, R.layout.audio_item, from, to);
-			searchList.setAdapter(adapter);
+			currentUserAudioList.setAdapter(adapter);
 		}
 	}
 
