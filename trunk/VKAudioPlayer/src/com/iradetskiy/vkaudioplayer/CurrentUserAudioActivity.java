@@ -8,6 +8,11 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -28,11 +33,34 @@ public class CurrentUserAudioActivity extends Activity {
 		String accessToken = (String) extras.get(VKApi.ACCESS_TOKEN);
 
 		currentUserAudioList = (ListView)findViewById(R.id.currentUserAudioList);
-		
+		this.registerForContextMenu(currentUserAudioList);
+
 		mApi = new VKApi(accessToken);
 		new LoadUserNameTask().execute(userId);
 		new LoadAudioGetResultsTask().execute(userId);
 	}
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.audio_item_context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId()) {
+            case R.id.play_context_menu:
+                //accomplish play function
+                return true;
+            case R.id.download_context_menu:
+                //accomplish download function
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
 
 	private class LoadAudioGetResultsTask extends
 			AsyncTask<String, Void, VKAudioGetResponse> {

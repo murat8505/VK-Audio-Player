@@ -8,6 +8,7 @@
     <string name="search_hint">Artist or song</string>
     <string name="search_button">Search</string>
     <string name="menu_download">Download</string>
+    <string name="menu_play">Play</string>
     <string name="menu_to_downloads">To Downloads</string>
     <string name="menu_to_playlist">To Playlist</string>
     <string name="search_list_header_searching">Searching\u2026</string>
