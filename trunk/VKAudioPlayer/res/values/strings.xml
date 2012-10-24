@@ -7,6 +7,8 @@
     <string name="title_activity_vklogin">VKLoginActivity</string>
     <string name="search_hint">Artist or song</string>
     <string name="search_button">Search</string>
+    <string name="search_menu">Search</string>
+    <string name="logout_menu">Log out</string>
     <string name="menu_download">Download</string>
     <string name="menu_play">Play</string>
     <string name="menu_to_downloads">To Downloads</string>

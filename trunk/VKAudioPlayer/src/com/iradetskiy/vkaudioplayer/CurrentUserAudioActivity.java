@@ -8,10 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.view.ContextMenu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
+import android.view.*;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -48,6 +45,13 @@ public class CurrentUserAudioActivity extends Activity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.current_user_menu, menu);
+        return true;
+    }
+
+    @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         switch (item.getItemId()) {
@@ -59,6 +63,20 @@ public class CurrentUserAudioActivity extends Activity {
                 return true;
             default:
                 return super.onContextItemSelected(item);
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.search_menu:
+                //accomplish invokation of SearchActivity
+                return true;
+            case R.id.logout_menu:
+                //accomplish clearing cookies and invokation of VKLoginActivity
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
