@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.view.*;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -73,7 +75,12 @@ public class CurrentUserAudioActivity extends Activity {
                 //accomplish invokation of SearchActivity
                 return true;
             case R.id.logout_menu:
-                //accomplish clearing cookies and invokation of VKLoginActivity
+                CookieSyncManager.createInstance(this);
+                CookieManager cookieManager = CookieManager.getInstance();
+                cookieManager.removeAllCookie();
+
+                this.finish();
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
