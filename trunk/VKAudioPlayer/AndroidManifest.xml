@@ -31,6 +31,9 @@
                 <action android:name="com.iradetskiy.action.PAUSE" />
             </intent-filter>
         </service>
+        <service android:name=".VKApiService">
+
+        </service>
     </application>
 
 </manifest>

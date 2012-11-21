@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.content.ComponentName;
+import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.IBinder;
+import android.util.Log;
 import android.view.*;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
@@ -17,9 +21,34 @@ import android.widget.SimpleAdapter;
 
 public class CurrentUserAudioActivity extends Activity {
 
-	VKApi mApi;
+    public final static String TAG = CurrentUserAudioActivity.class.getName();
+
+	//public static VKApi mApi;
 	public static final String[] from = {"song", "artist", "duration", "url"}; 
 	ListView currentUserAudioList;
+
+    private VKApiService apiService;
+    private boolean mBound = false;
+    private String accessToken;
+    private String userId;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+
+            VKApiService.VKApiBinder binder = (VKApiService.VKApiBinder) service;
+            apiService = binder.getService();
+            mBound = true;
+
+            CurrentUserAudioActivity.this.onApiConnected();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -28,16 +57,34 @@ public class CurrentUserAudioActivity extends Activity {
 
 		Intent intent = getIntent();
 		Bundle extras = intent.getExtras();
-		String userId = (String) extras.get(VKApi.USER_ID);
-		String accessToken = (String) extras.get(VKApi.ACCESS_TOKEN);
+		userId = (String) extras.get(VKApi.USER_ID);
+		accessToken = (String) extras.get(VKApi.ACCESS_TOKEN);
 
 		currentUserAudioList = (ListView)findViewById(R.id.currentUserAudioList);
 		this.registerForContextMenu(currentUserAudioList);
 
-		mApi = new VKApi(accessToken);
-		new LoadUserNameTask().execute(userId);
-		new LoadAudioGetResultsTask().execute(userId);
+		//mApi = new VKApi(accessToken);
+		//new LoadUserNameTask().execute(userId);
+		//new LoadAudioGetResultsTask().execute(userId);
 	}
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Intent intent = new Intent(this, VKApiService.class);
+        intent.putExtra(VKApiService.ACCESS_TOKEN, accessToken);
+        bindService(intent, mConnection, BIND_AUTO_CREATE);
+    }
+
+    protected void onStop() {
+        super.onStop();
+
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -73,6 +120,8 @@ public class CurrentUserAudioActivity extends Activity {
         switch (item.getItemId()) {
             case R.id.search_menu:
                 //accomplish invokation of SearchActivity
+                Intent searchIntent = new Intent(this, SearchActivity.class);
+                startActivity(searchIntent);
                 return true;
             case R.id.logout_menu:
                 CookieSyncManager.createInstance(this);
@@ -95,7 +144,7 @@ public class CurrentUserAudioActivity extends Activity {
 			VKAudioGetResponse response = null;
 
 			try {
-				response = mApi.getAudio("", "", "", "", "", "", "");
+				response = apiService.getAudio("", "", "", "", "", "", "");//mApi.getAudio("", "", "", "", "", "", "");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -136,7 +185,7 @@ public class CurrentUserAudioActivity extends Activity {
 			VKUsersGetResponse response = null;
 
 			try {
-				response = mApi
+				response = apiService
 						.getUsers(arg0[0], "first_name,last_name", "nom");
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -147,9 +196,18 @@ public class CurrentUserAudioActivity extends Activity {
 
 		@Override
 		protected void onPostExecute(VKUsersGetResponse response) {
+
+            Log.d(TAG, "Setting the title: " + response.getResults().get(0).first_name + " "
+                    + response.getResults().get(0).last_name);
+
 			CurrentUserAudioActivity.this
 					.setTitle(response.getResults().get(0).first_name + " "
 							+ response.getResults().get(0).last_name);
 		}
 	}
+
+    private void onApiConnected() {
+        new LoadUserNameTask().execute(userId);
+        new LoadAudioGetResultsTask().execute(userId);
+    }
 }

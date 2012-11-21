@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.content.ComponentName;
+import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -18,12 +22,30 @@ import android.widget.TextView;
 
 public class SearchActivity extends Activity implements OnItemClickListener{
 
-	public static final String[] from = {"song", "artist", "duration", "url"}; 
-	
-	private final String accessToken = "e27affe5e2da0ecbe2da0ecbe6e2f0a839ee2dae2db0ec380fa798a1438b154";
+	public static final String[] from = {"song", "artist", "duration", "url"};
+    private static final String TAG = SearchActivity.class.getName();
+
 	private EditText searchText;
 	private ListView searchList;
-	private VKAudio api;
+
+    private VKApiService apiService;
+    private boolean mBound = false;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+
+            VKApiService.VKApiBinder binder = (VKApiService.VKApiBinder) service;
+            apiService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -38,12 +60,30 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         searchList.setOnItemClickListener(this);
         
         searchText = (EditText)findViewById(R.id.searchText);
-        api = new VKAudio(accessToken);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Intent intent = new Intent(this, VKApiService.class);
+        bindService(intent, mConnection, BIND_AUTO_CREATE);
+    }
+
+    protected void onStop() {
+        super.onStop();
+
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
     }
     
     public void onSearchButtonClick(View v){
+        Log.d(TAG, "onSearchButtonClick starts...");
     	String q = searchText.getText().toString();
     	if (q != null && !q.equals("")){
+            Log.d(TAG, "onSearchButtonClick: running search task...");
     		new LoadSearchResultsTask().execute(q);
     	}
     }
@@ -55,7 +95,7 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 			VKAudioSearchResponse response = null;
 			
 			try {
-				response = api.search(arg0[0], "1", "2", "0", 10, 0);
+				response = apiService.searchAudio(arg0[0], "1", "2", "0", 10, 0);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} 
@@ -64,7 +104,9 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 		}
     	@Override
     	protected void onPostExecute(VKAudioSearchResponse response) {
-    		
+
+            Log.d(TAG, "onPostExecute: number of results = " + response.getItems().size());
+
     		int[] to = {R.id.song, R.id.artist, R.id.duration};
     		
     		ArrayList<Map<String, Object>> data = new ArrayList<Map<String,Object>>(response.getItems().size());

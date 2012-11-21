@@ -26,17 +26,28 @@ public class VKApiService extends Service {
 		}
 	}
 	
-	String accessToken;
+	private String accessToken;
 	
 	public final static String API_HOST = "https://api.vk.com/method/";
 	public final static String ACCESS_TOKEN = "access_token";
 	public final static String USER_ID = "user_id";
 	
 	@Override
-	public IBinder onBind(Intent arg0) {
+	public IBinder onBind(Intent intent) {
+
+        accessToken = (String)intent.getExtras().get(ACCESS_TOKEN);
+
 		return binder;
 	}
-	
+
+    public VKAudioSearchResponse searchAudio(String q, String auto_complete, String sort, String lyrics, Integer count, Integer offset) throws IOException, XmlPullParserException {
+
+        String[] keys = {"q", "auto_complete", "sort", "lyrics", "count", "offset", ACCESS_TOKEN};
+        String[] values = {q, auto_complete, sort, lyrics, count.toString(), offset.toString(), accessToken};
+
+        return new VKAudioSearchResponse(getResponse(composeRequest("audio.search.xml", keys, values)));
+    }
+
 	public VKUsersGetResponse getUsers(String uids, String fields, String name_case) throws XmlPullParserException, IOException {
 		
 		String[] keys = {"uids", "fields", "name_case", ACCESS_TOKEN};
@@ -62,6 +73,7 @@ public class VKApiService extends Service {
 		
 		return request;
 	}
+
 	private String getResponse(String requestString) {
 		String response = null;
 		
