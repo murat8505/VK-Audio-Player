@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.app.DownloadManager;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
@@ -18,6 +20,7 @@ import android.webkit.CookieSyncManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 public class CurrentUserAudioActivity extends Activity {
 
@@ -31,6 +34,7 @@ public class CurrentUserAudioActivity extends Activity {
     private boolean mBound = false;
     private String accessToken;
     private String userId;
+    private MyDownloadManager myDownloadManager;
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -63,9 +67,7 @@ public class CurrentUserAudioActivity extends Activity {
 		currentUserAudioList = (ListView)findViewById(R.id.currentUserAudioList);
 		this.registerForContextMenu(currentUserAudioList);
 
-		//mApi = new VKApi(accessToken);
-		//new LoadUserNameTask().execute(userId);
-		//new LoadAudioGetResultsTask().execute(userId);
+        myDownloadManager = new MyDownloadManager(this);
 	}
 
     @Override
@@ -108,7 +110,13 @@ public class CurrentUserAudioActivity extends Activity {
                 //accomplish play function
                 return true;
             case R.id.download_context_menu:
-                //accomplish download function
+
+                Map<String, String> data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
+
+                String uri = data.get(from[3]);
+                String what = data.get(from[1]) + " - " + data.get(from[0]);
+
+                myDownloadManager.download(uri, what);
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -119,7 +127,6 @@ public class CurrentUserAudioActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.search_menu:
-                //accomplish invokation of SearchActivity
                 Intent searchIntent = new Intent(this, SearchActivity.class);
                 startActivity(searchIntent);
                 return true;
