@@ -40,6 +40,7 @@
                 <action android:name="com.example.PlayMusicService.ACTION_PREVIOUS"/>
                 <action android:name="com.example.PlayMusicService.ACTION_KILL"/>
                 <action android:name="com.example.PlayMusicService.ACTION_SEEK_TO"/>
+                <action android:name="com.example.PlayMusicService.ACTION_BUFFERING_UPDATE"/>
             </intent-filter>
         </service>
         <service android:name=".VKApiService">
