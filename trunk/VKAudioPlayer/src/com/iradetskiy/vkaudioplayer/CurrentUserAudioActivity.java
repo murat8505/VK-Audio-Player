@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.app.DownloadManager;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
@@ -20,13 +18,27 @@ import android.webkit.CookieSyncManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.Toast;
 
-public class CurrentUserAudioActivity extends Activity {
+public class CurrentUserAudioActivity extends Activity implements AdapterView.OnItemClickListener{
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+        Map<String, String> data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(i);
+
+        Intent intent = new Intent();
+        intent.setAction(PlayMusicService.ACTION_PLAY);
+
+        intent.putExtra(from[0], data.get(from[0]));
+        intent.putExtra(from[1], data.get(from[1]));
+        intent.putExtra(from[3], data.get(from[3]));
+
+        startService(intent);
+        startActivity(new Intent(this, MusicControlActivity.class));
+    }
 
     public final static String TAG = CurrentUserAudioActivity.class.getName();
 
-	//public static VKApi mApi;
 	public static final String[] from = {"song", "artist", "duration", "url"}; 
 	ListView currentUserAudioList;
 
@@ -65,6 +77,7 @@ public class CurrentUserAudioActivity extends Activity {
 		accessToken = (String) extras.get(VKApi.ACCESS_TOKEN);
 
 		currentUserAudioList = (ListView)findViewById(R.id.currentUserAudioList);
+        currentUserAudioList.setOnItemClickListener(this);
 		this.registerForContextMenu(currentUserAudioList);
 
         myDownloadManager = new MyDownloadManager(this);
@@ -105,13 +118,24 @@ public class CurrentUserAudioActivity extends Activity {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        Map<String, String> data = null;
         switch (item.getItemId()) {
             case R.id.play_context_menu:
-                //accomplish play function
+                data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
+
+                Intent intent = new Intent();
+                intent.setAction(PlayMusicService.ACTION_PLAY);
+
+                intent.putExtra(from[0], data.get(from[0]));
+                intent.putExtra(from[1], data.get(from[1]));
+                intent.putExtra(from[3], data.get(from[3]));
+
+                startService(intent);
+                startActivity(new Intent(this, MusicControlActivity.class));
                 return true;
             case R.id.download_context_menu:
 
-                Map<String, String> data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
+                data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
 
                 String uri = data.get(from[3]);
                 String what = data.get(from[1]) + " - " + data.get(from[0]);

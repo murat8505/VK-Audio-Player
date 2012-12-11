@@ -24,11 +24,22 @@
             android:name=".SearchActivity"
             android:label="@string/title_activity_search" >
         </activity>
+        <activity android:name=".MusicControlActivity"/>
         <service android:name=".PlayAudioService">
             <intent-filter>
                 <action android:name="com.iradetskiy.action.PLAY" />
                 <action android:name="com.iradetskiy.action.STOP" />
                 <action android:name="com.iradetskiy.action.PAUSE" />
+            </intent-filter>
+        </service>
+        <service android:name=".PlayMusicService">
+            <intent-filter>
+                <action android:name="com.example.PlayMusicService.ACTION_PLAY"/>
+                <action android:name="com.example.PlayMusicService.ACTION_PAUSE"/>
+                <action android:name="com.example.PlayMusicService.ACTION_NEXT"/>
+                <action android:name="com.example.PlayMusicService.ACTION_PREVIOUS"/>
+                <action android:name="com.example.PlayMusicService.ACTION_KILL"/>
+                <action android:name="com.example.PlayMusicService.ACTION_SEEK_TO"/>
             </intent-filter>
         </service>
         <service android:name=".VKApiService">
