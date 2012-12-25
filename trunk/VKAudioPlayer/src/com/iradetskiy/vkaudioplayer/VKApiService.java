@@ -63,6 +63,15 @@ public class VKApiService extends Service {
 		
 		return new VKAudioGetResponse(getResponse(composeRequest("audio.get.xml", keys, values)));
 	}
+
+    public boolean deleteAudio(String aid, String oid) {
+        String[] keys = {"aid", "oid", ACCESS_TOKEN};
+        String[] values = {aid, oid, accessToken};
+
+        getResponse(composeRequest("audio.delete.xml", keys, values));
+
+        return true;
+    }
 	
 	private String composeRequest(String method, String[] keys, String[] values){
 		String request = API_HOST + method + "?";
@@ -70,7 +79,9 @@ public class VKApiService extends Service {
 		for (int i = 0; i < keys.length; i++) {
 			request += keys[i] + "=" + values[i] + "&";
 		}
-		
+
+        System.out.println(request);
+
 		return request;
 	}
 

@@ -6,5 +6,7 @@
           android:title="@string/menu_play"/>
     <item android:id="@+id/download_context_menu"
           android:title="@string/menu_download"/>
+    <item android:id="@+id/remove_menu"
+          android:title="@string/remove"/>
 
 </menu>

@@ -39,7 +39,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
     public final static String TAG = CurrentUserAudioActivity.class.getName();
 
-	public static final String[] from = {"song", "artist", "duration", "url"}; 
+	public static final String[] from = {"song", "artist", "duration", "url", "aid"};
 	ListView currentUserAudioList;
 
     private VKApiService apiService;
@@ -117,7 +117,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         Map<String, String> data = null;
         switch (item.getItemId()) {
             case R.id.play_context_menu:
@@ -141,6 +141,21 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
                 String what = data.get(from[1]) + " - " + data.get(from[0]);
 
                 myDownloadManager.download(uri, what);
+                return true;
+            case R.id.remove_menu:
+                data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
+
+                final String aid = data.get(from[4]);
+                (new AsyncTask<Object, Object, Object>() {
+                    @Override
+                    protected Object doInBackground(Object... objects) {
+                        apiService.deleteAudio(aid, userId);
+                        return null;  //To change body of implemented methods use File | Settings | File Templates.
+                    }
+                }).execute();
+
+                new LoadAudioGetResultsTask().execute(userId);
+
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -198,13 +213,17 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 				map.put(from[1], response.getItems().get(i).artist);
 				map.put(from[2], response.getItems().get(i).duration);
 				map.put(from[3], response.getItems().get(i).url);
+                map.put(from[4], response.getItems().get(i).aid);
+
 
 				data.add(map);
 			}
 
 			SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this,
 					data, R.layout.audio_item, from, to);
+            //adapter.notifyDataSetChanged();
 			currentUserAudioList.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
 		}
 	}
 
