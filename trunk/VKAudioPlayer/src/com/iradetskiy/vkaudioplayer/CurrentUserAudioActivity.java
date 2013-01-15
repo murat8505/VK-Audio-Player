@@ -18,6 +18,7 @@ import android.webkit.CookieSyncManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 public class CurrentUserAudioActivity extends Activity implements AdapterView.OnItemClickListener{
 
@@ -39,7 +40,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
     public final static String TAG = CurrentUserAudioActivity.class.getName();
 
-	public static final String[] from = {"song", "artist", "duration", "url", "aid"};
+	public static final String[] from = {"song", "artist", "duration", "url", "aid", "oid"};
 	ListView currentUserAudioList;
 
     private VKApiService apiService;
@@ -69,6 +70,8 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+        Log.d(TAG, "onCreate");
 		setContentView(R.layout.current_user_audio);
 
 		Intent intent = getIntent();
@@ -87,9 +90,14 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
     public void onStart() {
         super.onStart();
 
-        Intent intent = new Intent(this, VKApiService.class);
-        intent.putExtra(VKApiService.ACCESS_TOKEN, accessToken);
-        bindService(intent, mConnection, BIND_AUTO_CREATE);
+        Log.d(TAG, "onStart: accessToken = " + accessToken);
+
+        if (!mBound) {
+            Intent intent = new Intent(this, VKApiService.class);
+            intent.putExtra(VKApiService.ACCESS_TOKEN, accessToken);
+            bindService(intent, mConnection, BIND_AUTO_CREATE);
+        }
+
     }
 
     protected void onStop() {
@@ -146,11 +154,18 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
                 data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
 
                 final String aid = data.get(from[4]);
+                final String song = data.get(from[0]);
+                final String artist = data.get(from[1]);
+
                 (new AsyncTask<Object, Object, Object>() {
                     @Override
                     protected Object doInBackground(Object... objects) {
                         apiService.deleteAudio(aid, userId);
                         return null;  //To change body of implemented methods use File | Settings | File Templates.
+                    }
+                    @Override
+                    protected void onPostExecute(Object response) {
+                        Toast.makeText(CurrentUserAudioActivity.this, song + " - " + artist + " was removed", Toast.LENGTH_SHORT).show();
                     }
                 }).execute();
 

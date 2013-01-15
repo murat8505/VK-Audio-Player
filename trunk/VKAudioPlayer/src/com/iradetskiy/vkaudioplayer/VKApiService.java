@@ -2,6 +2,7 @@ package com.iradetskiy.vkaudioplayer;
 
 import java.io.IOException;
 
+import android.util.Log;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -26,16 +27,24 @@ public class VKApiService extends Service {
 		}
 	}
 	
-	private String accessToken;
+	private static String accessToken;
 	
 	public final static String API_HOST = "https://api.vk.com/method/";
 	public final static String ACCESS_TOKEN = "access_token";
 	public final static String USER_ID = "user_id";
+    private String uid;
+
+    public String getUserId() {
+        return uid;
+    }
 	
 	@Override
 	public IBinder onBind(Intent intent) {
 
-        accessToken = (String)intent.getExtras().get(ACCESS_TOKEN);
+        if (intent.hasExtra(ACCESS_TOKEN)){
+            accessToken = (String)intent.getExtras().get(ACCESS_TOKEN);
+            Log.d("VKApiService", "onBind: accessToken = " + accessToken);
+        }
 
 		return binder;
 	}
@@ -52,6 +61,7 @@ public class VKApiService extends Service {
 		
 		String[] keys = {"uids", "fields", "name_case", ACCESS_TOKEN};
 		String[] values = {uids, fields, name_case, accessToken};
+        uid = uids;
 		
 		return new VKUsersGetResponse(getResponse(composeRequest("users.get.xml", keys, values)));
 	}
@@ -71,6 +81,13 @@ public class VKApiService extends Service {
         getResponse(composeRequest("audio.delete.xml", keys, values));
 
         return true;
+    }
+
+    public void addAudio(String aid, String oid){
+        String[] keys = {"aid", "oid", ACCESS_TOKEN};
+        String[] values = {aid, oid, accessToken};
+
+        getResponse(composeRequest("audio.add.xml", keys, values));
     }
 	
 	private String composeRequest(String method, String[] keys, String[] values){

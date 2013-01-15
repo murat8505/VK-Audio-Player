@@ -55,6 +55,7 @@ public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarC
         super.onDestroy();
         unregisterReceiver(seekReceiver);
         startService(new Intent(PlayMusicService.ACTION_KILL));
+        Log.d("MusicControlActivity", "Activity destroyed");
     }
 
     @Override

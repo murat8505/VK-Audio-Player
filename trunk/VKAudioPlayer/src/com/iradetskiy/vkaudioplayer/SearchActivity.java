@@ -12,17 +12,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.*;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.TextView;
 
 public class SearchActivity extends Activity implements OnItemClickListener{
 
-	public static final String[] from = {"song", "artist", "duration", "url"};
+    public static final String[] from = {"song", "artist", "duration", "url", "aid", "oid"};
     private static final String TAG = SearchActivity.class.getName();
 
 	private EditText searchText;
@@ -30,6 +29,8 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 
     private VKApiService apiService;
     private boolean mBound = false;
+
+    private MyDownloadManager myDownloadManager;
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -60,6 +61,74 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         searchList.setOnItemClickListener(this);
         
         searchText = (EditText)findViewById(R.id.searchText);
+        registerForContextMenu(searchList);
+
+        myDownloadManager = new MyDownloadManager(this);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.search_context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        Map<String, String> data = null;
+        switch (item.getItemId()) {
+            case R.id.search_add_context_menu:
+
+                data = (Map<String, String>)searchList.getAdapter().getItem(info.position);
+
+                final String aid = data.get(from[4]);
+                final String oid = data.get(from[5]);
+                final String song = data.get(from[0]);
+                final String artist = data.get(from[1]);
+
+                (new AsyncTask<Object, Object, Object>(){
+                    @Override
+                    protected Object doInBackground(Object... objects) {
+                        apiService.addAudio(aid, oid);
+
+                        return null;
+                    }
+                    @Override
+                    protected void onPostExecute(Object response) {
+                        Toast.makeText(SearchActivity.this, song + " - " + artist + " was added", Toast.LENGTH_SHORT).show();
+                    }
+                }).execute();
+
+                return true;
+            case R.id.search_download_context_menu:
+
+                data = (Map<String, String>)searchList.getAdapter().getItem(info.position);
+
+                String uri = data.get(from[3]);
+                String what = data.get(from[1]) + " - " + data.get(from[0]);
+
+                myDownloadManager.download(uri, what);
+
+                return true;
+            case R.id.search_play_context_menu:
+
+                data = (Map<String, String>)searchList.getAdapter().getItem(info.position);
+
+                Intent intent = new Intent();
+                intent.setAction(PlayMusicService.ACTION_PLAY);
+
+                intent.putExtra(from[0], data.get(from[0]));
+                intent.putExtra(from[1], data.get(from[1]));
+                intent.putExtra(from[3], data.get(from[3]));
+
+                startService(intent);
+                startActivity(new Intent(this, MusicControlActivity.class));
+
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
     }
 
     @Override
@@ -118,6 +187,8 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     			map.put(from[1], response.getItems().get(i).artist);
     			map.put(from[2], response.getItems().get(i).duration);
     			map.put(from[3], response.getItems().get(i).url);
+                map.put(from[4], response.getItems().get(i).aid);
+                map.put(from[5], response.getItems().get(i).owner_id);
     			
     			data.add(map);
     		}
@@ -128,16 +199,16 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     }
     
     public void onItemClick(AdapterView<?> list, View parent, int pos, long id) {
-    	Intent playIntent = new Intent();
-    	
-		Map<String, String> map = (Map<String, String>)list.getAdapter().getItem(pos);
-    	playIntent.putExtra(from[0], map.get(from[0]));
-    	playIntent.putExtra(from[1], map.get(from[1]));
-    	playIntent.putExtra(from[2], map.get(from[2]));
-    	playIntent.putExtra(from[3], map.get(from[3]));
-    	
-    	playIntent.setAction(PlayAudioService.ACTION_PLAY);
-    	
-    	this.startService(playIntent);
+        Map<String, String> data = (Map<String, String>)searchList.getAdapter().getItem(pos);
+
+        Intent intent = new Intent();
+        intent.setAction(PlayMusicService.ACTION_PLAY);
+
+        intent.putExtra(from[0], data.get(from[0]));
+        intent.putExtra(from[1], data.get(from[1]));
+        intent.putExtra(from[3], data.get(from[3]));
+
+        startService(intent);
+        startActivity(new Intent(this, MusicControlActivity.class));
     }
 }
