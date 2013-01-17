@@ -99,7 +99,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
         }
 
     }
-
+    @Override
     protected void onStop() {
         super.onStop();
 
@@ -107,6 +107,15 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
             unbindService(mConnection);
             mBound = false;
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            moveTaskToBack(true);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     @Override

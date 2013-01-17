@@ -19,9 +19,15 @@ public class VKLoginActivity extends Activity implements OnVKLoginListener {
         
         loginPage = new WebView(this);
         loginPage.setWebViewClient(webViewClient);
-        loginPage.loadUrl("http://oauth.vk.com/oauth/authorize?client_id=2795250&scope=audio&redirect_uri=http://oauth.vk.com/blank.html&display=wap&response_type=token");
-        
+
         setContentView(loginPage);
+    }
+
+    @Override
+    protected void onStart(){
+        super.onStart();
+
+        loginPage.loadUrl("http://oauth.vk.com/oauth/authorize?client_id=2795250&scope=audio&redirect_uri=http://oauth.vk.com/blank.html&display=wap&response_type=token");
     }
 
 	public void onLogin(String userId, String accessToken) {

@@ -21,5 +21,6 @@
         <item quantity="one"><b>1 item</b></item>
         <item quantity="other"><b>%d items</b></item>
     </plurals>
+    <string name="kill_player">Close</string>
 
 </resources>

@@ -26,6 +26,9 @@ public class PlayMusicService extends Service implements MediaPlayer.OnPreparedL
     private boolean needToNotify = false;
     private MediaPlayer mediaPlayer;
 
+    private String currentSong;
+    private String currentArtist;
+
     private Thread musicControlNotifier = new Thread() {
         @Override
         public void run() {
@@ -35,6 +38,10 @@ public class PlayMusicService extends Service implements MediaPlayer.OnPreparedL
                         Intent intent = new Intent();
                         intent.setAction(ACTION_SEEK_TO);
                         intent.putExtra("seek_to", (mediaPlayer.getCurrentPosition() * 1000) / mediaPlayer.getDuration());
+                        intent.putExtra("current_position", mediaPlayer.getCurrentPosition());
+                        intent.putExtra("artist", currentArtist);
+                        intent.putExtra("song", currentSong);
+                        intent.putExtra("duration", mediaPlayer.getDuration());
                         sendBroadcast(intent);
                     }
                     sleep(1000);
@@ -63,9 +70,12 @@ public class PlayMusicService extends Service implements MediaPlayer.OnPreparedL
         if (action.equals(ACTION_PLAY)) {
 
             String uri = intent.getStringExtra(CurrentUserAudioActivity.from[3]);
+            currentSong = intent.getStringExtra(CurrentUserAudioActivity.from[0]);
+            currentArtist = intent.getStringExtra(CurrentUserAudioActivity.from[1]);
 
             if (uri != null) {
 
+                mediaPlayer.reset();
                 //AssetFileDescriptor fileDescriptor = getResources().openRawResourceFd(trackId);
                 try {
                     mediaPlayer.setDataSource(this, Uri.parse(uri));
