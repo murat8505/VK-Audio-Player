@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.content.ComponentName;
-import android.content.ServiceConnection;
+import com.iradetskiy.utility.DownloadUtility;
+import com.iradetskiy.vkapi.VKApi;
+import com.iradetskiy.vkapi.VKAudioGetResponse;
+import com.iradetskiy.vkapi.VKAudioItem;
+import com.iradetskiy.vkapi.VKUsersGetResponse;
+
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.*;
 import android.webkit.CookieManager;
@@ -22,7 +25,8 @@ import android.widget.Toast;
 
 public class CurrentUserAudioActivity extends Activity implements AdapterView.OnItemClickListener{
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
         Map<String, String> data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(i);
@@ -30,9 +34,9 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
         Intent intent = new Intent();
         intent.setAction(PlayMusicService.ACTION_PLAY);
 
-        intent.putExtra(from[0], data.get(from[0]));
-        intent.putExtra(from[1], data.get(from[1]));
-        intent.putExtra(from[3], data.get(from[3]));
+        intent.putExtra(VKAudioItem.TITLE, data.get(VKAudioItem.TITLE));
+        intent.putExtra(VKAudioItem.ARTIST, data.get(VKAudioItem.ARTIST));
+        intent.putExtra(VKAudioItem.URL, data.get(VKAudioItem.URL));
 
         startService(intent);
         startActivity(new Intent(this, MusicControlActivity.class));
@@ -40,32 +44,10 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
     public final static String TAG = CurrentUserAudioActivity.class.getName();
 
-	public static final String[] from = {"song", "artist", "duration", "url", "aid", "oid"};
 	ListView currentUserAudioList;
-
-    private VKApiService apiService;
-    private boolean mBound = false;
+    private VKApi mApi;
     private String accessToken;
     private String userId;
-    private MyDownloadManager myDownloadManager;
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-
-            VKApiService.VKApiBinder binder = (VKApiService.VKApiBinder) service;
-            apiService = binder.getService();
-            mBound = true;
-
-            CurrentUserAudioActivity.this.onApiConnected();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-        }
-    };
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -82,31 +64,16 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 		currentUserAudioList = (ListView)findViewById(R.id.currentUserAudioList);
         currentUserAudioList.setOnItemClickListener(this);
 		this.registerForContextMenu(currentUserAudioList);
-
-        myDownloadManager = new MyDownloadManager(this);
+		
+        mApi = VKApi.getApi(accessToken);
 	}
 
     @Override
     public void onStart() {
         super.onStart();
 
-        Log.d(TAG, "onStart: accessToken = " + accessToken);
-
-        if (!mBound) {
-            Intent intent = new Intent(this, VKApiService.class);
-            intent.putExtra(VKApiService.ACCESS_TOKEN, accessToken);
-            bindService(intent, mConnection, BIND_AUTO_CREATE);
-        }
-
-    }
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
+        new LoadUserNameTask().execute(userId);
+        new LoadAudioGetResultsTask().execute(userId);
     }
 
     @Override
@@ -132,7 +99,8 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
         return true;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public boolean onContextItemSelected(MenuItem item) {
         final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         Map<String, String> data = null;
@@ -143,9 +111,9 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
                 Intent intent = new Intent();
                 intent.setAction(PlayMusicService.ACTION_PLAY);
 
-                intent.putExtra(from[0], data.get(from[0]));
-                intent.putExtra(from[1], data.get(from[1]));
-                intent.putExtra(from[3], data.get(from[3]));
+                intent.putExtra(VKAudioItem.TITLE, data.get(VKAudioItem.TITLE));
+                intent.putExtra(VKAudioItem.ARTIST, data.get(VKAudioItem.ARTIST));
+                intent.putExtra(VKAudioItem.URL, data.get(VKAudioItem.URL));
 
                 startService(intent);
                 startActivity(new Intent(this, MusicControlActivity.class));
@@ -154,23 +122,24 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
                 data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
 
-                String uri = data.get(from[3]);
-                String what = data.get(from[1]) + " - " + data.get(from[0]);
+                String uri = data.get(VKAudioItem.URL);
+                String what = data.get(VKAudioItem.ARTIST) + " - " + data.get(VKAudioItem.TITLE);
 
-                myDownloadManager.download(uri, what);
+                DownloadUtility.getDownloadUtility(this).download(uri, what);
+                
                 return true;
             case R.id.remove_menu:
                 data = (Map<String, String>)currentUserAudioList.getAdapter().getItem(info.position);
 
-                final String aid = data.get(from[4]);
-                final String song = data.get(from[0]);
-                final String artist = data.get(from[1]);
+                final String aid = data.get(VKAudioItem.AID);
+                final String song = data.get(VKAudioItem.TITLE);
+                final String artist = data.get(VKAudioItem.ARTIST);
 
                 (new AsyncTask<Object, Object, Object>() {
                     @Override
                     protected Object doInBackground(Object... objects) {
-                        apiService.deleteAudio(aid, userId);
-                        return null;  //To change body of implemented methods use File | Settings | File Templates.
+                        mApi.deleteAudio(aid, userId);
+                        return null;  
                     }
                     @Override
                     protected void onPostExecute(Object response) {
@@ -214,7 +183,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 			VKAudioGetResponse response = null;
 
 			try {
-				response = apiService.getAudio("", "", "", "", "", "", "");//mApi.getAudio("", "", "", "", "", "", "");
+				response = mApi.getAudio("", "", "", "", "", "", "");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -225,29 +194,28 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 		@Override
 		protected void onPostExecute(VKAudioGetResponse response) {
 
-			int[] to = { R.id.song, R.id.artist, R.id.duration };
-
 			ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(
 					response.getItems().size());
 
 			for (int i = 0; i < response.getItems().size(); i++) {
 				Map<String, Object> map = new HashMap<String, Object>();
 
-				map.put(from[0], response.getItems().get(i).title);
-				map.put(from[1], response.getItems().get(i).artist);
-				map.put(from[2], response.getItems().get(i).duration);
-				map.put(from[3], response.getItems().get(i).url);
-                map.put(from[4], response.getItems().get(i).aid);
+				map.put(VKAudioItem.TITLE, response.getItems().get(i).title);
+				map.put(VKAudioItem.ARTIST, response.getItems().get(i).artist);
+				map.put(VKAudioItem.DURATION, response.getItems().get(i).duration);
+				map.put(VKAudioItem.URL, response.getItems().get(i).url);
+                map.put(VKAudioItem.AID, response.getItems().get(i).aid);
 
 
 				data.add(map);
 			}
 
 			SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this,
-					data, R.layout.audio_item, from, to);
-            //adapter.notifyDataSetChanged();
+					data, R.layout.audio_item, 
+					new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
+					new int[] { R.id.song, R.id.artist, R.id.duration });
+			
 			currentUserAudioList.setAdapter(adapter);
-            adapter.notifyDataSetChanged();
 		}
 	}
 
@@ -259,7 +227,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 			VKUsersGetResponse response = null;
 
 			try {
-				response = apiService
+				response = mApi
 						.getUsers(arg0[0], "first_name,last_name", "nom");
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -279,9 +247,4 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 							+ response.getResults().get(0).last_name);
 		}
 	}
-
-    private void onApiConnected() {
-        new LoadUserNameTask().execute(userId);
-        new LoadAudioGetResultsTask().execute(userId);
-    }
 }

@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.content.ComponentName;
-import android.content.ServiceConnection;
+import com.iradetskiy.utility.DownloadUtility;
+import com.iradetskiy.vkapi.VKApi;
+import com.iradetskiy.vkapi.VKAudioItem;
+import com.iradetskiy.vkapi.VKAudioSearchResponse;
+
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
-import android.os.IBinder;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuInflater;
@@ -20,33 +22,12 @@ import android.widget.*;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class SearchActivity extends Activity implements OnItemClickListener{
-
-    public static final String[] from = {"song", "artist", "duration", "url", "aid", "oid"};
+	
     private static final String TAG = SearchActivity.class.getName();
 
 	private EditText searchText;
 	private ListView searchList;
-
-    private VKApiService apiService;
-    private boolean mBound = false;
-
-    private MyDownloadManager myDownloadManager;
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-
-            VKApiService.VKApiBinder binder = (VKApiService.VKApiBinder) service;
-            apiService = binder.getService();
-            mBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-        }
-    };
+    private VKApi mApi;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,16 +35,12 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         setContentView(R.layout.search);
         
         searchList = (ListView)findViewById(R.id.searchResultsList);
-        View header = this.getLayoutInflater().inflate(R.layout.search_list_header, searchList, false);
-        searchList.addHeaderView(header);
         searchList.setAdapter(null);
-        ((TextView)findViewById(R.id.header_title)).setText(this.getResources().getQuantityString(R.plurals.number_of_found_audio_items, 0, 0));
         searchList.setOnItemClickListener(this);
         
         searchText = (EditText)findViewById(R.id.searchText);
         registerForContextMenu(searchList);
-
-        myDownloadManager = new MyDownloadManager(this);
+        mApi = VKApi.getApi(null);
     }
 
     @Override
@@ -73,7 +50,8 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         inflater.inflate(R.menu.search_context_menu, menu);
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public boolean onContextItemSelected(MenuItem item) {
         final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         Map<String, String> data = null;
@@ -82,15 +60,15 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 
                 data = (Map<String, String>)searchList.getAdapter().getItem(info.position);
 
-                final String aid = data.get(from[4]);
-                final String oid = data.get(from[5]);
-                final String song = data.get(from[0]);
-                final String artist = data.get(from[1]);
+                final String aid = data.get(VKAudioItem.AID);
+                final String oid = data.get(VKAudioItem.OID);
+                final String song = data.get(VKAudioItem.TITLE);
+                final String artist = data.get(VKAudioItem.ARTIST);
 
                 (new AsyncTask<Object, Object, Object>(){
                     @Override
                     protected Object doInBackground(Object... objects) {
-                        apiService.addAudio(aid, oid);
+                        mApi.addAudio(aid, oid);
 
                         return null;
                     }
@@ -105,10 +83,10 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 
                 data = (Map<String, String>)searchList.getAdapter().getItem(info.position);
 
-                String uri = data.get(from[3]);
-                String what = data.get(from[1]) + " - " + data.get(from[0]);
+                String uri = data.get(VKAudioItem.URL);
+                String what = data.get(VKAudioItem.ARTIST) + " - " + data.get(VKAudioItem.TITLE);
 
-                myDownloadManager.download(uri, what);
+                DownloadUtility.getDownloadUtility(this).download(uri, what);
 
                 return true;
             case R.id.search_play_context_menu:
@@ -118,9 +96,9 @@ public class SearchActivity extends Activity implements OnItemClickListener{
                 Intent intent = new Intent();
                 intent.setAction(PlayMusicService.ACTION_PLAY);
 
-                intent.putExtra(from[0], data.get(from[0]));
-                intent.putExtra(from[1], data.get(from[1]));
-                intent.putExtra(from[3], data.get(from[3]));
+                intent.putExtra(VKAudioItem.TITLE, data.get(VKAudioItem.TITLE));
+                intent.putExtra(VKAudioItem.ARTIST, data.get(VKAudioItem.ARTIST));
+                intent.putExtra(VKAudioItem.URL, data.get(VKAudioItem.URL));
 
                 startService(intent);
                 startActivity(new Intent(this, MusicControlActivity.class));
@@ -128,23 +106,6 @@ public class SearchActivity extends Activity implements OnItemClickListener{
                 return true;
             default:
                 return super.onContextItemSelected(item);
-        }
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        Intent intent = new Intent(this, VKApiService.class);
-        bindService(intent, mConnection, BIND_AUTO_CREATE);
-    }
-
-    protected void onStop() {
-        super.onStop();
-
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
         }
     }
     
@@ -164,7 +125,7 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 			VKAudioSearchResponse response = null;
 			
 			try {
-				response = apiService.searchAudio(arg0[0], "1", "2", "0", 10, 0);
+				response = mApi.searchAudio(arg0[0], "1", "2", "0", 10, 0);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} 
@@ -173,40 +134,38 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 		}
     	@Override
     	protected void onPostExecute(VKAudioSearchResponse response) {
-
-            Log.d(TAG, "onPostExecute: number of results = " + response.getItems().size());
-
-    		int[] to = {R.id.song, R.id.artist, R.id.duration};
-    		
     		ArrayList<Map<String, Object>> data = new ArrayList<Map<String,Object>>(response.getItems().size());
     		
     		for (int i = 0; i < response.getItems().size(); i++) {
     			Map<String, Object> map = new HashMap<String, Object>();
     			
-    			map.put(from[0], response.getItems().get(i).title);
-    			map.put(from[1], response.getItems().get(i).artist);
-    			map.put(from[2], response.getItems().get(i).duration);
-    			map.put(from[3], response.getItems().get(i).url);
-                map.put(from[4], response.getItems().get(i).aid);
-                map.put(from[5], response.getItems().get(i).owner_id);
+    			map.put(VKAudioItem.TITLE, response.getItems().get(i).title);
+    			map.put(VKAudioItem.ARTIST, response.getItems().get(i).artist);
+    			map.put(VKAudioItem.DURATION, response.getItems().get(i).duration);
+    			map.put(VKAudioItem.URL, response.getItems().get(i).url);
+                map.put(VKAudioItem.AID, response.getItems().get(i).aid);
+                map.put(VKAudioItem.OID, response.getItems().get(i).owner_id);
     			
     			data.add(map);
     		}
     		
-    		SimpleAdapter adapter = new SimpleAdapter(SearchActivity.this, data, R.layout.audio_item, from, to);
+    		SimpleAdapter adapter = new SimpleAdapter(SearchActivity.this, data, R.layout.audio_item, 
+    				new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
+    				new int[] {R.id.song, R.id.artist, R.id.duration});
     		searchList.setAdapter(adapter);
     	}
     }
     
-    public void onItemClick(AdapterView<?> list, View parent, int pos, long id) {
+    @SuppressWarnings("unchecked")
+	public void onItemClick(AdapterView<?> list, View parent, int pos, long id) {
         Map<String, String> data = (Map<String, String>)searchList.getAdapter().getItem(pos);
 
         Intent intent = new Intent();
         intent.setAction(PlayMusicService.ACTION_PLAY);
 
-        intent.putExtra(from[0], data.get(from[0]));
-        intent.putExtra(from[1], data.get(from[1]));
-        intent.putExtra(from[3], data.get(from[3]));
+        intent.putExtra(VKAudioItem.TITLE, data.get(VKAudioItem.TITLE));
+        intent.putExtra(VKAudioItem.ARTIST, data.get(VKAudioItem.ARTIST));
+        intent.putExtra(VKAudioItem.URL, data.get(VKAudioItem.URL));
 
         startService(intent);
         startActivity(new Intent(this, MusicControlActivity.class));

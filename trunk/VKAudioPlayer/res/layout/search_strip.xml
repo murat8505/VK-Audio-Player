@@ -1,35 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="horizontal">
-
-
-    <TextView
-            android:id="@+id/searchLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/search_label"
-            android:textAppearance="?android:attr/textAppearanceMedium"/>
-
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal" >
 
     <EditText
-            android:id="@+id/searchText"
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ems="10"
-            android:hint="@string/search_hint">
-
-        <requestFocus/>
+        android:id="@+id/searchText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/searchButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="3dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="3dp"
+        android:layout_toLeftOf="@+id/searchButton"
+        android:ems="10"
+        android:hint="@string/search_hint" >
     </EditText>
 
+    <ImageButton
+        android:id="@+id/searchButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="@string/search_button_context_description"
+        android:onClick="onSearchButtonClick"
+        android:src="@android:drawable/ic_menu_search" >
+    </ImageButton>
 
-    <Button
-            android:id="@+id/searchButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onSearchButtonClick"
-            android:text="@string/search_button"/>
-
-</LinearLayout>
+</RelativeLayout>

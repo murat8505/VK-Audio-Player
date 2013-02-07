@@ -17,7 +17,8 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.util.concurrent.TimeUnit;
+import com.iradetskiy.utility.TimeUtility;
+import com.iradetskiy.vkapi.VKAudioItem;
 
 public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarChangeListener {
 
@@ -50,8 +51,8 @@ public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarC
             isPlaying = intent.getBooleanExtra("is_playing", true);
             ImageButton playButton = (ImageButton)findViewById(R.id.button_play);
             playButton.setImageResource(isPlaying ? android.R.drawable.ic_media_play : android.R.drawable.ic_media_pause);
-            song.setText(intent.getStringExtra(CurrentUserAudioActivity.from[0]));
-            artist.setText(intent.getStringExtra(CurrentUserAudioActivity.from[1]));
+            song.setText(intent.getStringExtra(VKAudioItem.TITLE));
+            artist.setText(intent.getStringExtra(VKAudioItem.ARTIST));
             currentPosition.setText(intent.getStringExtra("position"));
             duration.setText(intent.getStringExtra("duration"));
         }
@@ -93,8 +94,8 @@ public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarC
         else {
             ((ImageButton)v).setImageResource(android.R.drawable.ic_media_play);
             Intent i = new Intent(PlayMusicService.ACTION_PLAY);
-            i.putExtra(CurrentUserAudioActivity.from[0], song.getText());
-            i.putExtra(CurrentUserAudioActivity.from[1], artist.getText());
+            i.putExtra(VKAudioItem.TITLE, song.getText());
+            i.putExtra(VKAudioItem.ARTIST, artist.getText());
             startService(i);//new Intent(PlayMusicService.ACTION_PLAY));
         }
         isPlaying = !isPlaying;
@@ -119,8 +120,8 @@ public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarC
 
             Intent reinvokeIntent = new Intent(this, MusicControlActivity.class);
             reinvokeIntent.putExtra("is_playing", isPlaying);
-            reinvokeIntent.putExtra(CurrentUserAudioActivity.from[0], song.getText());
-            reinvokeIntent.putExtra(CurrentUserAudioActivity.from[1], artist.getText());
+            reinvokeIntent.putExtra(VKAudioItem.TITLE, song.getText());
+            reinvokeIntent.putExtra(VKAudioItem.ARTIST, artist.getText());
             reinvokeIntent.putExtra("position", currentPosition.getText());
             reinvokeIntent.putExtra("duration", duration.getText());
 
@@ -171,19 +172,19 @@ public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarC
                 if (seekTo != -1) {
                     seekBar.setProgress(seekTo);
 
-                    MusicControlActivity.this.currentPosition.setText(String.format("%d:%d",
+                    MusicControlActivity.this.currentPosition.setText(TimeUtility.formatSeconds(currentPosition + "")/*String.format("%d:%d",
                             TimeUnit.MILLISECONDS.toMinutes(currentPosition),
                             TimeUnit.MILLISECONDS.toSeconds(currentPosition) -
                                     TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition))
-                    ));
+                    )*/);
                     MusicControlActivity.this.artist.setText(intent.getStringExtra("artist"));
                     MusicControlActivity.this.song.setText(intent.getStringExtra("song"));
                     int duration = intent.getIntExtra("duration", -1);
-                    MusicControlActivity.this.duration.setText(String.format("%d:%d",
+                    MusicControlActivity.this.duration.setText(TimeUtility.formatSeconds(duration + "")/*String.format("%d:%d",
                             TimeUnit.MILLISECONDS.toMinutes(duration),
                             TimeUnit.MILLISECONDS.toSeconds(duration) -
                                     TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
-                    ));
+                    )*/);
                 }
             }
             else if (action.equals(PlayMusicService.ACTION_BUFFERING_UPDATE)) {

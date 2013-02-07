@@ -1,5 +1,7 @@
 package com.iradetskiy.vkaudioplayer;
 
+import com.iradetskiy.vkapi.VKApi;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -27,7 +29,7 @@ public class VKLoginActivity extends Activity implements OnVKLoginListener {
     protected void onStart(){
         super.onStart();
 
-        loginPage.loadUrl("http://oauth.vk.com/oauth/authorize?client_id=2795250&scope=audio&redirect_uri=http://oauth.vk.com/blank.html&display=wap&response_type=token");
+        loginPage.loadUrl("https://oauth.vk.com/oauth/authorize?client_id=2795250&scope=audio&redirect_uri=http://oauth.vk.com/blank.html&display=wap&response_type=token");
     }
 
 	public void onLogin(String userId, String accessToken) {

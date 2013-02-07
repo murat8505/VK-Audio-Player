@@ -9,9 +9,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.iradetskiy.vkaudioplayer.VKAudioGetResponse;
-import com.iradetskiy.vkaudioplayer.VKAudioSearchResponse;
-import com.iradetskiy.vkaudioplayer.VKUsersGetResponse;
 
 public class VKApi {
 	
@@ -28,7 +25,11 @@ public class VKApi {
 	
 	public static VKApi getApi(String accessToken) {
 		if (api == null) {
-			api = new VKApi(accessToken);
+			if (accessToken != null) {
+				api = new VKApi(accessToken);
+			} else {
+				api = null;
+			}
 		}
 		return api;
 	}

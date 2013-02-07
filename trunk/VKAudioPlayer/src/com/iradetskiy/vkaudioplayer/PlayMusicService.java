@@ -2,7 +2,6 @@ package com.iradetskiy.vkaudioplayer;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -11,6 +10,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
+
+import com.iradetskiy.vkapi.VKAudioItem;
 
 
 public class PlayMusicService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnBufferingUpdateListener{
@@ -69,17 +70,15 @@ public class PlayMusicService extends Service implements MediaPlayer.OnPreparedL
 
         if (action.equals(ACTION_PLAY)) {
 
-            String uri = intent.getStringExtra(CurrentUserAudioActivity.from[3]);
-            currentSong = intent.getStringExtra(CurrentUserAudioActivity.from[0]);
-            currentArtist = intent.getStringExtra(CurrentUserAudioActivity.from[1]);
+            String uri = intent.getStringExtra(VKAudioItem.URL);
+            currentSong = intent.getStringExtra(VKAudioItem.TITLE);
+            currentArtist = intent.getStringExtra(VKAudioItem.ARTIST);
 
             if (uri != null) {
 
                 mediaPlayer.reset();
-                //AssetFileDescriptor fileDescriptor = getResources().openRawResourceFd(trackId);
                 try {
                     mediaPlayer.setDataSource(this, Uri.parse(uri));
-                    //fileDescriptor.close();
                     mediaPlayer.prepareAsync();
                 } catch (IOException e) {
                     Log.d("PlayMusicService", "Trouble with playing");
