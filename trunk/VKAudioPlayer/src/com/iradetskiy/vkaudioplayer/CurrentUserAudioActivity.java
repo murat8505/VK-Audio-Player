@@ -57,7 +57,7 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
         Log.d(TAG, "onCreate");
 		setContentView(R.layout.current_user_audio);
-
+		
 		Intent intent = getIntent();
 		Bundle extras = intent.getExtras();
 		userId = (String) extras.get(VKApi.USER_ID);
@@ -68,16 +68,20 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 		this.registerForContextMenu(currentUserAudioList);
 		
 		RestoreObject restoreData = (RestoreObject) getLastNonConfigurationInstance();
-        if (restoreData != null && restoreData.mUserAudio.size() != 0) {
-        	mUserName = restoreData.mUserName;
-        	mUserAudioList = restoreData.mUserAudio;
+        if (restoreData != null) {
+        	if (restoreData.mUserAudio.size() != 0) {
+        		mUserName = restoreData.mUserName;
+        		mUserAudioList = restoreData.mUserAudio;
         	
-        	SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this, mUserAudioList, R.layout.audio_item, 
+        		SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this, mUserAudioList, R.layout.audio_item, 
     				new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
     				new int[] {R.id.song, R.id.artist, R.id.duration});
-    		currentUserAudioList.setAdapter(adapter);
+        		currentUserAudioList.setAdapter(adapter);
+        	}
     		
-    		setTitle(mUserName);
+    		setTitle(String.format(getResources().getString(R.string.current_user_audio_activity_when_loaded), mUserName, mUserAudioList.size()));
+        } else {
+        	setTitle(getResources().getString(R.string.current_user_audio_activity_when_loading));
         }
 		
         mApi = VKApi.getApi(accessToken);
@@ -249,6 +253,18 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 					new int[] { R.id.song, R.id.artist, R.id.duration });
 			
 			currentUserAudioList.setAdapter(adapter);
+			
+			if (CurrentUserAudioActivity.this.mUserName == null) {
+            	CurrentUserAudioActivity.this
+					.setTitle(String.format(
+							CurrentUserAudioActivity.this.getResources().getString(R.string.current_user_audio_activity_when_audiolist_loaded), 
+							CurrentUserAudioActivity.this.mUserAudioList.size()));
+            } else {
+            	CurrentUserAudioActivity.this
+				.setTitle(String.format(
+						CurrentUserAudioActivity.this.getResources().getString(R.string.current_user_audio_activity_when_loaded), 
+						CurrentUserAudioActivity.this.mUserName, CurrentUserAudioActivity.this.mUserAudioList.size()));
+            }
 		}
 	}
 
@@ -278,9 +294,17 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
             CurrentUserAudioActivity.this.mUserName = 
             		response.getResults().get(0).first_name + " "
 							+ response.getResults().get(0).last_name;
-            
-			CurrentUserAudioActivity.this
-					.setTitle(CurrentUserAudioActivity.this.mUserName);
+            if (CurrentUserAudioActivity.this.mUserAudioList == null) {
+            	CurrentUserAudioActivity.this
+					.setTitle(String.format(
+							CurrentUserAudioActivity.this.getResources().getString(R.string.current_user_audio_activity_when_username_loaded), 
+							CurrentUserAudioActivity.this.mUserName));
+            } else {
+            	CurrentUserAudioActivity.this
+				.setTitle(String.format(
+						CurrentUserAudioActivity.this.getResources().getString(R.string.current_user_audio_activity_when_loaded), 
+						CurrentUserAudioActivity.this.mUserName, CurrentUserAudioActivity.this.mUserAudioList.size()));
+            }	
 		}
 	}
 }
