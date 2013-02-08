@@ -48,6 +48,8 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
     private VKApi mApi;
     private String accessToken;
     private String userId;
+    private ArrayList<Map<String, String>> mUserAudioList;
+    private String mUserName;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,6 +67,19 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
         currentUserAudioList.setOnItemClickListener(this);
 		this.registerForContextMenu(currentUserAudioList);
 		
+		RestoreObject restoreData = (RestoreObject) getLastNonConfigurationInstance();
+        if (restoreData != null && restoreData.mUserAudio.size() != 0) {
+        	mUserName = restoreData.mUserName;
+        	mUserAudioList = restoreData.mUserAudio;
+        	
+        	SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this, mUserAudioList, R.layout.audio_item, 
+    				new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
+    				new int[] {R.id.song, R.id.artist, R.id.duration});
+    		currentUserAudioList.setAdapter(adapter);
+    		
+    		setTitle(mUserName);
+        }
+		
         mApi = VKApi.getApi(accessToken);
 	}
 
@@ -74,6 +89,22 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 
         new LoadUserNameTask().execute(userId);
         new LoadAudioGetResultsTask().execute(userId);
+    }
+    
+    private class RestoreObject {
+    	public String mUserName;
+    	public ArrayList<Map<String, String>> mUserAudio;
+    	public RestoreObject(String userName, ArrayList<Map<String, String>> userAudio) {
+    		mUserName = userName;
+    		mUserAudio = userAudio;
+    	}
+    }
+    
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+    	
+    	final RestoreObject restoreObject = new RestoreObject(mUserName, mUserAudioList);
+    	return restoreObject;
     }
 
     @Override
@@ -194,11 +225,11 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 		@Override
 		protected void onPostExecute(VKAudioGetResponse response) {
 
-			ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(
+			ArrayList<Map<String, String>> data = new ArrayList<Map<String, String>>(
 					response.getItems().size());
 
 			for (int i = 0; i < response.getItems().size(); i++) {
-				Map<String, Object> map = new HashMap<String, Object>();
+				Map<String, String> map = new HashMap<String, String>();
 
 				map.put(VKAudioItem.TITLE, response.getItems().get(i).title);
 				map.put(VKAudioItem.ARTIST, response.getItems().get(i).artist);
@@ -210,6 +241,8 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
 				data.add(map);
 			}
 
+			CurrentUserAudioActivity.this.mUserAudioList = data;
+			
 			SimpleAdapter adapter = new SimpleAdapter(CurrentUserAudioActivity.this,
 					data, R.layout.audio_item, 
 					new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
@@ -242,9 +275,12 @@ public class CurrentUserAudioActivity extends Activity implements AdapterView.On
             Log.d(TAG, "Setting the title: " + response.getResults().get(0).first_name + " "
                     + response.getResults().get(0).last_name);
 
+            CurrentUserAudioActivity.this.mUserName = 
+            		response.getResults().get(0).first_name + " "
+							+ response.getResults().get(0).last_name;
+            
 			CurrentUserAudioActivity.this
-					.setTitle(response.getResults().get(0).first_name + " "
-							+ response.getResults().get(0).last_name);
+					.setTitle(CurrentUserAudioActivity.this.mUserName);
 		}
 	}
 }

@@ -25,7 +25,8 @@
         </activity>
         <activity
             android:name=".SearchActivity"
-            android:label="@string/title_activity_search" >
+            android:label="@string/title_activity_search"
+            android:windowSoftInputMode="stateHidden" >
         </activity>
         <activity android:name="com.iradetskiy.vkaudioplayer.MusicControlActivity"/>
         <service android:name="com.iradetskiy.vkaudioplayer.PlayMusicService">

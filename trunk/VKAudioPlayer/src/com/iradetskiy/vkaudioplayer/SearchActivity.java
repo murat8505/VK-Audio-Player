@@ -12,7 +12,6 @@ import com.iradetskiy.vkapi.VKAudioSearchResponse;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -30,17 +29,28 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 	private EditText searchText;
 	private ListView searchList;
     private VKApi mApi;
+    private ArrayList<Map<String, String>> restoreData;
 	
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search);
+        
+        searchText = (EditText)findViewById(R.id.searchText);
         
         searchList = (ListView)findViewById(R.id.searchResultsList);
         searchList.setAdapter(null);
         searchList.setOnItemClickListener(this);
         
-        searchText = (EditText)findViewById(R.id.searchText);
+        restoreData = (ArrayList<Map<String, String>>) getLastNonConfigurationInstance();
+        if (restoreData != null && restoreData.size() != 0) {
+        	SimpleAdapter adapter = new SimpleAdapter(SearchActivity.this, restoreData, R.layout.audio_item, 
+    				new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
+    				new int[] {R.id.song, R.id.artist, R.id.duration});
+    		searchList.setAdapter(adapter);
+        }
+        
         registerForContextMenu(searchList);
         mApi = VKApi.getApi(null);
     }
@@ -117,10 +127,14 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     	if (q != null && !q.equals("")){
             Log.d(TAG, "onSearchButtonClick: running search task...");
     		new LoadSearchResultsTask().execute(q);
-    	}
-    	
-    	((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+    	} 
+    	((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE))
     		.hideSoftInputFromWindow(searchText.getWindowToken(), 0);
+    }
+    
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+    	return restoreData;
     }
     
     private class LoadSearchResultsTask extends AsyncTask<String, Void, VKAudioSearchResponse> {
@@ -139,10 +153,10 @@ public class SearchActivity extends Activity implements OnItemClickListener{
 		}
     	@Override
     	protected void onPostExecute(VKAudioSearchResponse response) {
-    		ArrayList<Map<String, Object>> data = new ArrayList<Map<String,Object>>(response.getItems().size());
+    		ArrayList<Map<String, String>> data = new ArrayList<Map<String, String>>(response.getItems().size());
     		
     		for (int i = 0; i < response.getItems().size(); i++) {
-    			Map<String, Object> map = new HashMap<String, Object>();
+    			Map<String, String> map = new HashMap<String, String>();
     			
     			map.put(VKAudioItem.TITLE, response.getItems().get(i).title);
     			map.put(VKAudioItem.ARTIST, response.getItems().get(i).artist);
@@ -154,6 +168,7 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     			data.add(map);
     		}
     		
+    		SearchActivity.this.restoreData = data;
     		SimpleAdapter adapter = new SimpleAdapter(SearchActivity.this, data, R.layout.audio_item, 
     				new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
     				new int[] {R.id.song, R.id.artist, R.id.duration});
