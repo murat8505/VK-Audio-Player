@@ -172,19 +172,11 @@ public class MusicControlActivity extends Activity implements SeekBar.OnSeekBarC
                 if (seekTo != -1) {
                     seekBar.setProgress(seekTo);
 
-                    MusicControlActivity.this.currentPosition.setText(TimeUtility.formatSeconds(currentPosition + "")/*String.format("%d:%d",
-                            TimeUnit.MILLISECONDS.toMinutes(currentPosition),
-                            TimeUnit.MILLISECONDS.toSeconds(currentPosition) -
-                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition))
-                    )*/);
+                    MusicControlActivity.this.currentPosition.setText(TimeUtility.formatSeconds(currentPosition / 1000 + ""));
                     MusicControlActivity.this.artist.setText(intent.getStringExtra("artist"));
                     MusicControlActivity.this.song.setText(intent.getStringExtra("song"));
                     int duration = intent.getIntExtra("duration", -1);
-                    MusicControlActivity.this.duration.setText(TimeUtility.formatSeconds(duration + "")/*String.format("%d:%d",
-                            TimeUnit.MILLISECONDS.toMinutes(duration),
-                            TimeUnit.MILLISECONDS.toSeconds(duration) -
-                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration))
-                    )*/);
+                    MusicControlActivity.this.duration.setText(TimeUtility.formatSeconds(duration / 1000 + ""));
                 }
             }
             else if (action.equals(PlayMusicService.ACTION_BUFFERING_UPDATE)) {
