@@ -4,7 +4,7 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="9"
-              android:targetSdkVersion="16"/>
+              android:targetSdkVersion="17"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".CurrentUserAudioActivity" >
+            android:name="com.iradetskiy.vkaudioplayer.UserAudioActivity" >
         </activity>
         <activity
             android:name=".SearchActivity"
@@ -29,7 +29,8 @@
             android:windowSoftInputMode="stateHidden" >
         </activity>
         <activity android:name="com.iradetskiy.vkaudioplayer.MusicControlActivity"/>
-        <service android:name="com.iradetskiy.vkaudioplayer.PlayMusicService">
+        <service android:name="com.iradetskiy.vkaudioplayer.PlayMusicService"
+            	 android:exported="false">
             <intent-filter>
                 <action android:name="com.example.PlayMusicService.ACTION_PLAY"/>
                 <action android:name="com.example.PlayMusicService.ACTION_PAUSE"/>

@@ -13,8 +13,12 @@ import com.iradetskiy.utility.TimeUtility;
 
 
 public class VKAudioSearchResponse {
+	public static final String AUDIO = "audio";
+	public static final String COUNT = "count";
+	
 	private int count;
 	private List<VKAudioItem> items;
+	private VKAudioSearchRequest mRequest;
 	
 	public VKAudioSearchResponse(String responseXml) throws XmlPullParserException, IOException{
 		parseResponseXml(responseXml);
@@ -33,48 +37,48 @@ public class VKAudioSearchResponse {
 			
 			if(eventType == XmlPullParser.START_TAG) {
 	        	
-	            if (xpp.getName().equals("count")) {
+	            if (xpp.getName().equals(COUNT)) {
 	            	count = Integer.parseInt(xpp.nextText());
 	            	if (count == 0) {
 	            		return;
 	            	}
 	            }
 	            
-	            if (xpp.getName().equals("audio")) {
+	            if (xpp.getName().equals(AUDIO)) {
 	            	item = new VKAudioItem();
 	            }
 	            
-	            if (xpp.getName().equals("aid")) {
+	            if (xpp.getName().equals(VKAudioItem.AID)) {
 	            	item.aid = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("owner_id")) {
+	            if (xpp.getName().equals(VKAudioItem.OID)) {
 	            	item.owner_id = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("artist")) {
+	            if (xpp.getName().equals(VKAudioItem.ARTIST)) {
 	            	item.artist = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("title")) {
+	            if (xpp.getName().equals(VKAudioItem.TITLE)) {
 	            	item.title = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("duration")) {
+	            if (xpp.getName().equals(VKAudioItem.DURATION)) {
 	            	item.duration = TimeUtility.formatSeconds(xpp.nextText());
 	            }
 	            
-	            if (xpp.getName().equals("url")) {
+	            if (xpp.getName().equals(VKAudioItem.URL)) {
 	            	item.url = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("lyrics_id")) {
+	            if (xpp.getName().equals(VKAudioItem.LYRICS_ID)) {
 	            	item.lyrics_id = xpp.nextText();
 	            }
 	        	
 	        } else if(eventType == XmlPullParser.END_TAG) {
 	            
-	        	if (xpp.getName().equals("audio")) {
+	        	if (xpp.getName().equals(AUDIO)) {
 	            	items.add(item);
 	            }
 	        	
@@ -82,6 +86,14 @@ public class VKAudioSearchResponse {
 			
 			eventType = xpp.next();
 		}
+	}
+	
+	void setRequest(VKAudioSearchRequest request) {
+		mRequest = request;
+	}
+	
+	public VKAudioSearchRequest getRequest() {
+		return mRequest;
 	}
 	
 	public List<VKAudioItem> getItems() {

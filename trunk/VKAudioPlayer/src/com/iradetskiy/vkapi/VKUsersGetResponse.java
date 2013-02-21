@@ -12,9 +12,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 public class VKUsersGetResponse {
 	
-	public final static String FIRST_NAME = "first_name";
-	public final static String LAST_NAME = "last_name";
-	public final static String UID = "uid";
+	public final static String USER = "user";
 	
 	private List<VKUserItem> items;
 	
@@ -34,25 +32,25 @@ public class VKUsersGetResponse {
 			
 			if(eventType == XmlPullParser.START_TAG) {
 	            
-				if (xpp.getName().equals("user")) {
+				if (xpp.getName().equals(USER)) {
 	            	item = new VKUserItem();
 	            }
 				
-	            if (xpp.getName().equals(FIRST_NAME)) {
+	            if (xpp.getName().equals(VKGetUsersRequest.FIELD_FIRST_NAME)) {
 	            	item.first_name = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals(LAST_NAME)) {
+	            if (xpp.getName().equals(VKGetUsersRequest.FIELD_LAST_NAME)) {
 	            	item.last_name = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals(UID)) {
+	            if (xpp.getName().equals(VKGetUsersRequest.FIELD_UID)) {
 	            	item.uid = xpp.nextText();
 	            }
 	        	
 	        } else if(eventType == XmlPullParser.END_TAG) {
 	            
-	        	if (xpp.getName().equals("user")) {
+	        	if (xpp.getName().equals(USER)) {
 	            	items.add(item);
 	            }
 	        	

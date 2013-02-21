@@ -13,7 +13,10 @@ import com.iradetskiy.utility.TimeUtility;
 
 
 public class VKAudioGetResponse {
+	public static final String AUDIO = "audio";
+	
 	private List<VKAudioItem> items;
+	private VKAudioGetRequest mRequest;
 	
 	public VKAudioGetResponse(String responseXml) throws XmlPullParserException, IOException{
 		parseResponseXml(responseXml);
@@ -32,41 +35,41 @@ public class VKAudioGetResponse {
 			
 			if(eventType == XmlPullParser.START_TAG) {
 	            
-	            if (xpp.getName().equals("audio")) {
+	            if (xpp.getName().equals(AUDIO)) {
 	            	item = new VKAudioItem();
 	            }
 	            
-	            if (xpp.getName().equals("aid")) {
+	            if (xpp.getName().equals(VKAudioItem.AID)) {
 	            	item.aid = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("owner_id")) {
+	            if (xpp.getName().equals(VKAudioItem.OID)) {
 	            	item.owner_id = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("artist")) {
+	            if (xpp.getName().equals(VKAudioItem.ARTIST)) {
 	            	item.artist = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("title")) {
+	            if (xpp.getName().equals(VKAudioItem.TITLE)) {
 	            	item.title = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("duration")) {
+	            if (xpp.getName().equals(VKAudioItem.DURATION)) {
 	            	item.duration = TimeUtility.formatSeconds(xpp.nextText());
 	            }
 	            
-	            if (xpp.getName().equals("url")) {
+	            if (xpp.getName().equals(VKAudioItem.URL)) {
 	            	item.url = xpp.nextText();
 	            }
 	            
-	            if (xpp.getName().equals("lyrics_id")) {
+	            if (xpp.getName().equals(VKAudioItem.LYRICS_ID)) {
 	            	item.lyrics_id = xpp.nextText();
 	            }
 	        	
 	        } else if(eventType == XmlPullParser.END_TAG) {
 	            
-	        	if (xpp.getName().equals("audio")) {
+	        	if (xpp.getName().equals(AUDIO)) {
 	            	items.add(item);
 	            }
 	        	
@@ -78,5 +81,13 @@ public class VKAudioGetResponse {
 	
 	public List<VKAudioItem> getItems() {
 		return items;
+	}
+	
+	void setRequest(VKAudioGetRequest request) {
+		mRequest = request;
+	}
+	
+	public VKAudioGetRequest getRequest() {
+		return mRequest;
 	}
 }

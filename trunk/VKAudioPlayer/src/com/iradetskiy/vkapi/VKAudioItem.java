@@ -7,6 +7,7 @@ public class VKAudioItem {
 	public static String TITLE = "title";
 	public static String ARTIST = "artist";
 	public static String DURATION = "duration";
+	public static String LYRICS_ID = "lyrics_id";
 	
 	public String aid;
 	public String owner_id;

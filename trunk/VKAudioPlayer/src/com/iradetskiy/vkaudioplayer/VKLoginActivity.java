@@ -32,12 +32,8 @@ public class VKLoginActivity extends Activity implements OnVKLoginListener {
         loginPage.loadUrl("https://oauth.vk.com/oauth/authorize?client_id=2795250&scope=audio&redirect_uri=http://oauth.vk.com/blank.html&display=wap&response_type=token");
     }
 
-	public void onLogin(String userId, String accessToken) {
-		
-		Intent intent = new Intent(this, CurrentUserAudioActivity.class);
-		intent.putExtra(VKApi.USER_ID, userId);
-		intent.putExtra(VKApi.ACCESS_TOKEN, accessToken);
-		
-		startActivity(intent);
+	public void onLogin(String accessToken, String userId) {
+		VKApi.getApi(accessToken, userId);
+		startActivity(new Intent(this, UserAudioActivity.class));
 	}
 }

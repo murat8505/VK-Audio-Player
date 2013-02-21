@@ -16,6 +16,8 @@
         android:layout_marginRight="3dp"
         android:layout_toLeftOf="@+id/searchButton"
         android:ems="10"
+        android:imeOptions="actionSearch"
+        android:singleLine="true"
         android:hint="@string/search_hint" >
     </EditText>
 

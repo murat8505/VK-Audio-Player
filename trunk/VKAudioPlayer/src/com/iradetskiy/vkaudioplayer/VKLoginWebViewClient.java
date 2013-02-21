@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.iradetskiy.vkapi.VKApi;
+
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -21,13 +23,10 @@ public class VKLoginWebViewClient extends WebViewClient {
 				return false;
 			}
 			Map<String, String> map = parseParams(url.getRef());
-			String accessToken = map.get("access_token");
-			if (accessToken != null) {
-				
-				if (loginListener != null){
-					loginListener.onLogin(map.get("user_id"), accessToken);
-				}
-				
+			String accessToken = map.get(VKApi.ACCESS_TOKEN);
+			String userId = map.get(VKApi.USER_ID);
+			if (accessToken != null && loginListener != null) {
+				loginListener.onLogin(accessToken, userId);
 				return true;
 			}
 		} catch (MalformedURLException e) {
