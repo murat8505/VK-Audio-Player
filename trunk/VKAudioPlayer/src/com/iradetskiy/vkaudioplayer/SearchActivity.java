@@ -1,13 +1,14 @@
 package com.iradetskiy.vkaudioplayer;
 
 import com.iradetskiy.utility.DownloadUtility;
-import com.iradetskiy.vkapi.VKApi;
 import com.iradetskiy.vkapi.VKAudioItem;
 import com.iradetskiy.vkapi.VKAudioSearchRequest;
 import com.iradetskiy.vkapi.VKAudioSearchResponse;
 import com.iradetskiy.vkaudioplayer.adapter.SearchAdapter;
+import com.iradetskiy.vkaudioplayer.task.AddAudioTask;
+import com.iradetskiy.vkaudioplayer.task.SearchAudioTask;
+import com.iradetskiy.vkaudioplayer.task.SearchAudioTask.OnSearchAudioResponseListener;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -23,13 +24,12 @@ import android.widget.*;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.TextView.OnEditorActionListener;
 
-public class SearchActivity extends Activity implements OnItemClickListener{
+public class SearchActivity extends Activity implements OnItemClickListener, OnSearchAudioResponseListener{
 	
     private static final String TAG = SearchActivity.class.getName();
 
 	private EditText searchText;
 	private ListView searchList;
-    private VKApi mApi;
     private VKAudioSearchResponse restoreData;
 	
     @Override
@@ -39,7 +39,6 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         
         searchText = (EditText)findViewById(R.id.searchText);
         searchText.setOnEditorActionListener(new OnEditorActionListener() {
-			
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				switch(actionId){
@@ -62,7 +61,6 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         }
         
         registerForContextMenu(searchList);
-        mApi = VKApi.getApi();
     }
 
     @Override
@@ -79,26 +77,9 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         switch (item.getItemId()) {
             case R.id.search_add_context_menu:
 
-                data = (VKAudioItem)searchList.getAdapter().getItem(info.position);
-
-                final String aid = data.aid;
-                final String oid = data.owner_id;
-                final String song = data.title;
-                final String artist = data.artist;
-
-                (new AsyncTask<Object, Object, Object>(){
-                    @Override
-                    protected Object doInBackground(Object... objects) {
-                        mApi.addAudio(aid, oid);
-
-                        return null;
-                    }
-                    @Override
-                    protected void onPostExecute(Object response) {
-                        Toast.makeText(SearchActivity.this, song + " - " + artist + " was added", Toast.LENGTH_SHORT).show();
-                    }
-                }).execute();
-
+            	AddAudioTask addAudio = new AddAudioTask();
+            	addAudio.execute((VKAudioItem)searchList.getAdapter().getItem(info.position));
+            	
                 return true;
             case R.id.search_download_context_menu:
 
@@ -135,7 +116,9 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     	String q = searchText.getText().toString();
     	if (q != null && !q.equals("")){
             Log.d(TAG, "onSearchButtonClick: running search task...");
-    		new LoadSearchResultsTask().execute(q);
+            SearchAudioTask searchAudioTask = new SearchAudioTask();
+            searchAudioTask.setOnSearchAudioResponseListener(this);
+    		searchAudioTask.execute(new VKAudioSearchRequest(q));
     	} 
     	((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE))
     		.hideSoftInputFromWindow(searchText.getWindowToken(), 0);
@@ -144,28 +127,6 @@ public class SearchActivity extends Activity implements OnItemClickListener{
     @Override
     public Object onRetainNonConfigurationInstance() {
     	return restoreData;
-    }
-    
-    private class LoadSearchResultsTask extends AsyncTask<String, Void, VKAudioSearchResponse> {
-    	
-		@Override
-		protected VKAudioSearchResponse doInBackground(String... q) {
-			VKAudioSearchResponse response = null;
-			
-			try {
-				response = mApi.searchAudio(new VKAudioSearchRequest(q[0]));
-			} catch (Exception e) {
-				e.printStackTrace();
-			} 
-			
-			return response;
-		}
-    	@Override
-    	protected void onPostExecute(VKAudioSearchResponse response) {
-    		SearchActivity.this.restoreData = response;
-    		SearchAdapter adapter = new SearchAdapter(SearchActivity.this, response);
-    		searchList.setAdapter(adapter);
-    	}
     }
     
     public void onItemClick(AdapterView<?> list, View parent, int pos, long id) {
@@ -181,4 +142,11 @@ public class SearchActivity extends Activity implements OnItemClickListener{
         startService(intent);
         startActivity(new Intent(this, MusicControlActivity.class));
     }
+
+	@Override
+	public void onSearchAudioResponse(VKAudioSearchResponse response) {
+		restoreData = response;
+		SearchAdapter adapter = new SearchAdapter(this, response);
+		searchList.setAdapter(adapter);
+	}
 }

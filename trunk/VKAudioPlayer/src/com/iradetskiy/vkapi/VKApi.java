@@ -95,20 +95,26 @@ public class VKApi {
 		return response;
 	}
 
-    public boolean deleteAudio(String aid, String oid) {
-        String[] keys = {"aid", "oid", ACCESS_TOKEN};
-        String[] values = {aid, oid, mAccessToken};
-
-        getResponse(composeRequest("/audio.delete.xml", keys, values));
+    public boolean deleteAudio(VKAudioItem item) {
+    	
+        HashMap<String, String> query = new HashMap<String, String>();
+        query.put(VKAudioItem.AID, item.aid);
+        query.put(VKAudioItem.OID, item.owner_id);
+        query.put(ACCESS_TOKEN, mAccessToken);
+        
+        getResponse(composeRequest("/audio.delete.xml", query));
 
         return true;
     }
 
-    public void addAudio(String aid, String oid){
-        String[] keys = {"aid", "oid", ACCESS_TOKEN};
-        String[] values = {aid, oid, mAccessToken};
+    public void addAudio(VKAudioItem item){
+    	
+    	HashMap<String, String> query = new HashMap<String, String>();
+        query.put(VKAudioItem.AID, item.aid);
+        query.put(VKAudioItem.OID, item.owner_id);
+        query.put(ACCESS_TOKEN, mAccessToken);
 
-        getResponse(composeRequest("/audio.add.xml", keys, values));
+        getResponse(composeRequest("/audio.add.xml", query));
     }
 	
     private URI composeRequest(String method, Map<String, String> query) {

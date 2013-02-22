@@ -13,9 +13,7 @@
     <string name="search_button_context_description">Search</string>
     <string name="kill_player">Close</string>
     <string name="current_user_audio_activity_when_loading">Loading My Audios\u2026</string>
-    <string name="current_user_audio_activity_when_loaded">%1$s | My Audios (%2$d)</string>
     <string name="current_user_audio_activity_when_username_loaded">%s | My Audios</string>
-    <string name="current_user_audio_activity_when_audiolist_loaded">My Audios (%d)</string>
    <string name="play_pause_content_description">Play or Pause</string>
 
 </resources>

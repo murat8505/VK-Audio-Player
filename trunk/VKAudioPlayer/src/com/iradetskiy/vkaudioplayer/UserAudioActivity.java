@@ -1,8 +1,5 @@
 package com.iradetskiy.vkaudioplayer;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import com.iradetskiy.utility.DownloadUtility;
 import com.iradetskiy.vkapi.VKApi;
 import com.iradetskiy.vkapi.VKAudioGetRequest;
@@ -11,31 +8,33 @@ import com.iradetskiy.vkapi.VKAudioItem;
 import com.iradetskiy.vkapi.VKGetUsersRequest;
 import com.iradetskiy.vkapi.VKUsersGetResponse;
 import com.iradetskiy.vkaudioplayer.adapter.UserAudioAdapter;
+import com.iradetskiy.vkaudioplayer.task.DeleteAudioTask;
 import com.iradetskiy.vkaudioplayer.task.GetAudioTask;
 import com.iradetskiy.vkaudioplayer.task.GetUsersTask;
-import com.iradetskiy.vkaudioplayer.task.OnGetAudioResponseListener;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
-import android.view.*;
+import android.view.ContextMenu;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.Toast;
 
 public class UserAudioActivity extends Activity 
-	implements AdapterView.OnItemClickListener, OnGetAudioResponseListener, GetUsersTask.OnGetUsersListener{
+	implements AdapterView.OnItemClickListener, GetAudioTask.OnGetAudioResponseListener, GetUsersTask.OnGetUsersListener{
 
     public final static String TAG = UserAudioActivity.class.getName();
 
 	ListView currentUserAudioList;
     private VKApi mApi;
-    private ArrayList<Map<String, String>> mUserAudioList;
+    private VKAudioGetResponse mUserAudioList;
     private String mUserName;
 	
 	@Override
@@ -49,47 +48,30 @@ public class UserAudioActivity extends Activity
         currentUserAudioList.setOnItemClickListener(this);
 		this.registerForContextMenu(currentUserAudioList);
 		
-		RestoreObject restoreData = (RestoreObject) getLastNonConfigurationInstance();
-        if (restoreData != null) {
-        	if (restoreData.mUserAudio.size() != 0) {
-        		mUserName = restoreData.mUserName;
-        		mUserAudioList = restoreData.mUserAudio;
-        	
-        		SimpleAdapter adapter = new SimpleAdapter(UserAudioActivity.this, mUserAudioList, R.layout.audio_item, 
-    				new String[] { VKAudioItem.TITLE, VKAudioItem.ARTIST, VKAudioItem.DURATION }, 
-    				new int[] {R.id.song, R.id.artist, R.id.duration});
-        		currentUserAudioList.setAdapter(adapter);
-        	}
-    		
-    		setTitle(String.format(getResources().getString(R.string.current_user_audio_activity_when_loaded), mUserName, mUserAudioList.size()));
-        } else {
-        	setTitle(getResources().getString(R.string.current_user_audio_activity_when_loading));
-        }
+		mApi = VKApi.getApi();
 		
-        mApi = VKApi.getApi();
-        
-        if (mApi != null) {
-        	
+		RestoreObject restoreData = (RestoreObject) getLastNonConfigurationInstance();
+        if (restoreData != null && restoreData.mUserAudio != null && restoreData.mUserAudio.getItems().size() != 0) {
+        	mUserName = restoreData.mUserName;
+    		mUserAudioList = restoreData.mUserAudio;
+    		
+    		setTitle(String.format(getResources().getString(R.string.current_user_audio_activity_when_username_loaded), mUserName));
+    		currentUserAudioList.setAdapter(new UserAudioAdapter(this, mUserAudioList));
+        } else if (mApi != null) {
+        	GetUsersTask getUsersTask = new GetUsersTask();
+            getUsersTask.setOnGetUsersListener(this);
+            getUsersTask.execute(new VKGetUsersRequest(mApi.getUserId()));
+            
+            GetAudioTask getAudioTask = new GetAudioTask();
+            getAudioTask.setOnGetAudioResponseListener(this);
+            getAudioTask.execute(new VKAudioGetRequest(mApi.getUserId()));
         }
 	}
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        
-        GetUsersTask getUsersTask = new GetUsersTask();
-        getUsersTask.setOnGetUsersListener(this);
-        getUsersTask.execute(new VKGetUsersRequest(mApi.getUserId()));
-        
-        GetAudioTask getAudioTask = new GetAudioTask();
-        getAudioTask.setOnGetAudioResponseListener(this);
-        getAudioTask.execute(new VKAudioGetRequest(mApi.getUserId()));
-    }
     
     private class RestoreObject {
     	public String mUserName;
-    	public ArrayList<Map<String, String>> mUserAudio;
-    	public RestoreObject(String userName, ArrayList<Map<String, String>> userAudio) {
+    	public VKAudioGetResponse mUserAudio;
+    	public RestoreObject(String userName, VKAudioGetResponse userAudio) {
     		mUserName = userName;
     		mUserAudio = userAudio;
     	}
@@ -97,7 +79,6 @@ public class UserAudioActivity extends Activity
     
     @Override
     public Object onRetainNonConfigurationInstance() {
-    	
     	final RestoreObject restoreObject = new RestoreObject(mUserName, mUserAudioList);
     	return restoreObject;
     }
@@ -154,23 +135,9 @@ public class UserAudioActivity extends Activity
                 
                 return true;
             case R.id.remove_menu:
-                data = (VKAudioItem)currentUserAudioList.getAdapter().getItem(info.position);
-
-                final String aid = data.aid;
-                final String song = data.title;
-                final String artist = data.artist;
-
-                (new AsyncTask<Object, Object, Object>() {
-                    @Override
-                    protected Object doInBackground(Object... objects) {
-                        mApi.deleteAudio(aid, mApi.getUserId());
-                        return null;  
-                    }
-                    @Override
-                    protected void onPostExecute(Object response) {
-                        Toast.makeText(UserAudioActivity.this, song + " - " + artist + " was removed", Toast.LENGTH_SHORT).show();
-                    }
-                }).execute();
+                
+            	DeleteAudioTask deleteAudio = new DeleteAudioTask();
+            	deleteAudio.execute((VKAudioItem)currentUserAudioList.getAdapter().getItem(info.position));
                 
                 GetAudioTask getAudioTask = new GetAudioTask();
                 getAudioTask.setOnGetAudioResponseListener(this);
@@ -222,16 +189,12 @@ public class UserAudioActivity extends Activity
 	public void onGetAudioResponse(VKAudioGetResponse response) {
 		UserAudioAdapter adapter = new UserAudioAdapter(UserAudioActivity.this, response);
 		currentUserAudioList.setAdapter(adapter);
+		mUserAudioList = response;
 	}
 
 	@Override
 	public void onGetUsersResponse(VKUsersGetResponse response) {
-		UserAudioActivity.this.mUserName = response.getResults().get(0).first_name + " "
-				+ response.getResults().get(0).last_name;
-		
-		UserAudioActivity.this
-		.setTitle(String.format(
-				UserAudioActivity.this.getResources().getString(R.string.current_user_audio_activity_when_username_loaded), 
-				UserAudioActivity.this.mUserName));
+		mUserName = response.getResults().get(0).first_name + " " + response.getResults().get(0).last_name;
+		setTitle(String.format(getResources().getString(R.string.current_user_audio_activity_when_username_loaded), mUserName));
 	}
 }
